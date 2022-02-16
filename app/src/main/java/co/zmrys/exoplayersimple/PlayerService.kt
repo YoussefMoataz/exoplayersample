@@ -3,7 +3,9 @@ package co.zmrys.exoplayersimple
 import android.app.Notification
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.content.ContextCompat
@@ -53,7 +55,11 @@ class PlayerService : Service() {
                         applicationContext,
                         Intent(applicationContext, this@PlayerService::class.java)
                     )
-                    startForeground(notificationId, notification)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    }else{
+                        startForeground(notificationId, notification)
+                    }
                     isForegroundService = true
                 }
             }

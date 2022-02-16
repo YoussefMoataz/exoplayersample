@@ -13,14 +13,12 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.appcompat.app.AppCompatActivity
 import co.zmrys.exoplayersimple.databinding.ActivityMainBinding
-import co.zmrys.exoplayersimple.extensions.artist
 import co.zmrys.exoplayersimple.extensions.displayTitle
-import com.google.android.exoplayer2.ControlDispatcher
+import co.zmrys.exoplayersimple.extensions.title
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -56,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private val data: List<MediaMetadataCompat> by lazy {
         Utils.createSimpleData()
     }
+    private lateinit var dataa: MediaMetadataCompat
 
     private val exoPlayer by lazy {
         Utils.createSimpleExoPlayer(this)
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         mediaSessionConnector.apply {
             setPlayer(exoPlayer)
             setQueueNavigator(createQueueNavigator())
-            setQueueEditor(createQueueEditor())
+//            setQueueEditor(createQueueEditor())
         }
 
         val mediaController = MediaControllerCompat(this, mediaSession)
@@ -94,7 +93,6 @@ class MainActivity : AppCompatActivity() {
     private fun createQueueEditor() = object : MediaSessionConnector.QueueEditor {
         override fun onCommand(
             player: Player,
-            controlDispatcher: ControlDispatcher,
             command: String,
             extras: Bundle?,
             cb: ResultReceiver?
@@ -122,30 +120,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun createQueueNavigator() = object : TimelineQueueNavigator(mediaSession) {
         override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat {
-            val currentMedia = data[windowIndex]
             return MediaDescriptionCompat.Builder()
-                .setTitle(currentMedia.displayTitle)
-                .setDescription(currentMedia.description.description)
-                .setSubtitle(currentMedia.artist)
-                .setIconUri(currentMedia.description.iconUri)
+                .setTitle(dataa.displayTitle)
                 .build()
         }
 
-        override fun onSkipToPrevious(player: Player, controlDispatcher: ControlDispatcher) {
+        override fun onSkipToPrevious(player: Player) {
             Timber.i("onSkipToPrevious")
         }
     }
 
     private fun preparePlayer() {
-        val concatenableSource = ConcatenatingMediaSource()
-        data.forEach {
-            concatenableSource.addMediaSource(
-                progressiveSourceFactory.createMediaSource(
-                    MediaItem.fromUri(it.description.mediaUri!!)
-                )
-            )
-        }
-        exoPlayer.addMediaSource(concatenableSource)
+        dataa = MediaMetadataCompat.Builder()
+            .apply {
+                title = "fatiha"
+                displayTitle = "fatiha"
+            }.build()
+        exoPlayer.setMediaItem(MediaItem.fromUri("https://server8.mp3quran.net/ahmad_huth/002.mp3"))
         exoPlayer.prepare()
     }
 
@@ -158,9 +149,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        exoPlayer.release()
         if (playerService != null) {
             unbindService(playerServiceConnection)
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+//        if (playerService != null) {
+//            unbindService(playerServiceConnection)
+//        }
     }
 
     private val playerServiceConnection = object : ServiceConnection {

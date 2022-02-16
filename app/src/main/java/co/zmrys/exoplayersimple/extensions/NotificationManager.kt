@@ -10,14 +10,9 @@ import co.zmrys.exoplayersimple.R
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import com.google.android.exoplayer2.DefaultControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 const val NOW_PLAYING_CHANNEL_ID = "com.example.videoplayer_exoplayer.media.NOW_PLAYING"
 const val NOW_PLAYING_NOTIFICATION_ID = 0xb339 // Arbitrary number used to identify our notification
@@ -33,20 +28,27 @@ class NotificationManager(
 
     init {
         val mediaController = MediaControllerCompat(context, sessionToken)
-        notificationManager = PlayerNotificationManager.createWithNotificationChannel(
+//        notificationManager = PlayerNotificationManager.createWithNotificationChannel(
+//            context,
+//            NOW_PLAYING_CHANNEL_ID,
+//            R.string.notification_channel,
+//            R.string.notification_channel_description,
+//            NOW_PLAYING_NOTIFICATION_ID,
+//            DescriptionAdapter(mediaController),
+//            notificationListener
+//        )
+
+        notificationManager = PlayerNotificationManager.Builder(
             context,
-            NOW_PLAYING_CHANNEL_ID,
-            R.string.notification_channel,
-            R.string.notification_channel_description,
             NOW_PLAYING_NOTIFICATION_ID,
-            DescriptionAdapter(mediaController),
-            notificationListener
-        )
+            NOW_PLAYING_CHANNEL_ID,
+            DescriptionAdapter(mediaController)
+        ).build()
         notificationManager.setMediaSessionToken(sessionToken)
         notificationManager.setSmallIcon(R.drawable.ic_baseline_library_music_24)
         // Don't display the rewind or fast-forward buttons.
-        notificationManager.setControlDispatcher(DefaultControlDispatcher(-1, -1))
-
+        notificationManager.setUseFastForwardAction(false)
+        notificationManager.setUseRewindAction(false)
     }
 
     fun hideNotification() {
